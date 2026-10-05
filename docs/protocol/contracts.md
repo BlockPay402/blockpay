@@ -64,10 +64,10 @@ Funds are paid with `balance::send_funds`, into the recipient's address balance.
 
 | Network | Package | Registry |
 | --- | --- | --- |
-| `sui:testnet` | _to be published_ | _to be published_ |
+| `sui:testnet` | [`0x84443af24c3b4fdfc5dc3df15d1cb11c6c0f00434890d58cf0188c6a5eb8083e`](https://suiscan.xyz/testnet/object/0x84443af24c3b4fdfc5dc3df15d1cb11c6c0f00434890d58cf0188c6a5eb8083e) | `0x96dbbded5ab4bf48bfc3643b57ef1d18c156b28475506e8a182564f25ddab228` |
 | `sui:mainnet` | _after audit_ | _after audit_ |
 
-Until canonical deployments are listed here, configure the deployment explicitly in clients (`networks[network].channel`) and in the facilitator.
+The SDK trusts the deployments listed here without extra configuration. For a network not listed yet, configure the deployment explicitly in clients (`networks[network].channel`) and in the facilitator.
 
 ### Build and test
 
