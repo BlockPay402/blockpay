@@ -1,0 +1,36 @@
+name: Release
+
+# Push a tag `vX.Y.Z` after `pnpm release:version X.Y.Z` is merged.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - name: Tag matches package versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          for f in packages/*/package.json; do
+            v=$(node -p "require('./$f').version")
+            [ "$v" = "$tag" ] || { echo "$f is $v, tag is $tag"; exit 1; }
+          done
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm -r --filter './packages/*' publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

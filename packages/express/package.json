@@ -1,0 +1,56 @@
+{
+  "name": "@blockpay402/express",
+  "version": "0.1.0",
+  "description": "Express middleware for BlockPay (x402 on Sui).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@blockpay402/server": "workspace:*",
+    "@blockpay402/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "express": ">=4"
+  },
+  "devDependencies": {
+    "express": "^5.1.0",
+    "@types/express": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockPay402/blockpay.git",
+    "directory": "packages/express"
+  },
+  "homepage": "https://docs.blockpay.gg",
+  "keywords": [
+    "x402",
+    "sui",
+    "payments",
+    "usdc",
+    "http-402",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

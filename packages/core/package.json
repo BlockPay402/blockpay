@@ -1,0 +1,48 @@
+{
+  "name": "@blockpay402/core",
+  "version": "0.1.0",
+  "description": "Shared x402 v2 types, schemas, codecs and Sui network/asset registry.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockPay402/blockpay.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://docs.blockpay.gg",
+  "keywords": [
+    "x402",
+    "sui",
+    "payments",
+    "usdc",
+    "http-402",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

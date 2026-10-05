@@ -1,0 +1,62 @@
+{
+  "name": "@blockpay402/facilitator",
+  "version": "0.1.0",
+  "description": "Reference x402 facilitator for Sui: /verify, /settle, /supported and channel redemption.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./mock": {
+      "types": "./dist/mock.d.ts",
+      "import": "./dist/mock.js",
+      "require": "./dist/mock.cjs"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite.d.ts",
+      "import": "./dist/sqlite.js",
+      "require": "./dist/sqlite.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@blockpay402/core": "workspace:*",
+    "@blockpay402/sui": "workspace:*",
+    "@mysten/sui": "^2.34.0",
+    "hono": "^4.9.0",
+    "@hono/node-server": "^1.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockPay402/blockpay.git",
+    "directory": "packages/facilitator"
+  },
+  "homepage": "https://docs.blockpay.gg",
+  "keywords": [
+    "x402",
+    "sui",
+    "payments",
+    "usdc",
+    "http-402",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

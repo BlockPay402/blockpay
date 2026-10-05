@@ -1,0 +1,22 @@
+{
+  "name": "@blockpay402/example-e2e-localnet",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx run.ts"
+  },
+  "dependencies": {
+    "@blockpay402/agent": "workspace:*",
+    "@blockpay402/client": "workspace:*",
+    "@blockpay402/core": "workspace:*",
+    "@blockpay402/express": "workspace:*",
+    "@blockpay402/facilitator": "workspace:*",
+    "@blockpay402/sui": "workspace:*",
+    "@mysten/sui": "^2.34.0",
+    "express": "^5.1.0",
+    "@hono/node-server": "^1.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "blockpay",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' run build",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run",
+    "test:move": "cd contracts/blockpay && sui move test",
+    "e2e": "tsx examples/e2e-localnet/run.ts",
+    "contract:publish": "tsx scripts/contract.ts publish",
+    "contract:freeze": "tsx scripts/contract.ts freeze",
+    "ops:fund-sponsor": "tsx scripts/fund-sponsor.ts",
+    "release:version": "tsx scripts/set-version.ts",
+    "release:check": "pnpm build && pnpm test && pnpm -r --filter './packages/*' exec pnpm pack --pack-destination ../../.release",
+    "release:publish": "pnpm -r --filter './packages/*' publish --access public"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@mysten/sui": "^2.34.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "express": "^5.1.0",
+    "hono": "^4.9.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0",
+    "zod": "^4.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

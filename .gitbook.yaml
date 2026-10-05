@@ -1,0 +1,6 @@
+# GitBook Git Sync: publish docs/ as docs.blockpay.gg
+root: ./docs/
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md

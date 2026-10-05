@@ -1,0 +1,50 @@
+{
+  "name": "@blockpay402/client",
+  "version": "0.1.0",
+  "description": "Paying fetch / axios clients for x402 endpoints on Sui.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@blockpay402/core": "workspace:*",
+    "@blockpay402/sui": "workspace:*",
+    "@mysten/sui": "^2.34.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockPay402/blockpay.git",
+    "directory": "packages/client"
+  },
+  "homepage": "https://docs.blockpay.gg",
+  "keywords": [
+    "x402",
+    "sui",
+    "payments",
+    "usdc",
+    "http-402",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@blockpay402/agent",
+  "version": "0.1.0",
+  "description": "Agent wallet for BlockPay: budgets, approvals, audit trail, LLM tool adapter.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@blockpay402/core": "workspace:*",
+    "@blockpay402/client": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockPay402/blockpay.git",
+    "directory": "packages/agent"
+  },
+  "homepage": "https://docs.blockpay.gg",
+  "keywords": [
+    "x402",
+    "sui",
+    "payments",
+    "usdc",
+    "http-402",
+    "agents"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}
