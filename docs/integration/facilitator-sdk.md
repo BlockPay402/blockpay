@@ -43,7 +43,13 @@ createFacilitator({
     channelStateTtlMs?: number,      // re-read channel state at least this often; default 30s
   }],
   signer?: Signer, privateKey?: string,
-  sponsor?: { exact?: boolean, channels?: boolean, maxGasBudget?: bigint },   // defaults: true, true, 0.05 SUI
+  sponsor?: {                                // see Facilitator → Gas sponsorship
+    exact?: boolean, channels?: boolean,       // defaults: true, true
+    maxGasBudget?: bigint,                     // 0.01 SUI
+    maxCommands?: number,                      // 16
+    maxExactStorage?: bigint,                  // 2_000_000 MIST net storage fee
+    maxChannelStorage?: bigint,                // 10_000_000 MIST
+  },
   store?: FacilitatorStore,          // default: in-memory
   redeem?: {
     intervalMs?: number,             // default 60s

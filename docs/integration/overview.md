@@ -4,16 +4,20 @@ BlockPay ships as TypeScript packages under `@blockpay402`. Install only the sid
 
 | Package | For | Runs in |
 | --- | --- | --- |
-| `@blockpay402/express` | Charging from an Express app | Node |
-| `@blockpay402/next` | Charging from Next.js route handlers (any Fetch-API runtime: Hono, Bun, Deno, Workers) | Node, edge |
-| `@blockpay402/server` | Framework-agnostic handler, for custom adapters | Node, edge |
-| `@blockpay402/client` | Paying: `fetch` wrapper, Axios interceptor, channel management | Node, browser |
-| `@blockpay402/agent` | Paying from AI agents: budgets, approvals, audit, LLM tool | Node, browser |
-| `@blockpay402/facilitator` | Running a facilitator (and a mock for tests) | Node |
-| `@blockpay402/sui` | Sui primitives: transaction builders, vouchers, channel reads | Node, browser |
-| `@blockpay402/core` | x402 v2 types, schemas, codecs, networks, assets | anywhere |
+| [`@blockpay402/express`](https://www.npmjs.com/package/@blockpay402/express) | Charging from an Express app | Node |
+| [`@blockpay402/next`](https://www.npmjs.com/package/@blockpay402/next) | Charging from Next.js route handlers (any Fetch-API runtime: Hono, Bun, Deno, Workers) | Node, edge |
+| [`@blockpay402/server`](https://www.npmjs.com/package/@blockpay402/server) | Framework-agnostic handler, for custom adapters | Node, edge |
+| [`@blockpay402/client`](https://www.npmjs.com/package/@blockpay402/client) | Paying: `fetch` wrapper, Axios interceptor, channel management | Node, browser |
+| [`@blockpay402/agent`](https://www.npmjs.com/package/@blockpay402/agent) | Paying from AI agents: budgets, approvals, audit, LLM tool | Node, browser |
+| [`@blockpay402/facilitator`](https://www.npmjs.com/package/@blockpay402/facilitator) | Running a facilitator (and a mock for tests) | Node |
+| [`@blockpay402/sui`](https://www.npmjs.com/package/@blockpay402/sui) | Sui primitives: transaction builders, vouchers, channel reads | Node, browser |
+| [`@blockpay402/core`](https://www.npmjs.com/package/@blockpay402/core) | x402 v2 types, schemas, codecs, networks, assets | anywhere |
 
-All packages ship ESM and CJS builds with TypeScript types and need Node 20+ (24 recommended).
+All packages are published on [npm](https://www.npmjs.com/org/blockpay402), released together under one version, and ship ESM and CJS builds with TypeScript types. They need Node 20+ (24 recommended).
+
+```bash
+npm i @blockpay402/express   # or: pnpm add / yarn add / bun add
+```
 
 ### Picking a starting point
 

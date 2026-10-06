@@ -10,6 +10,24 @@ x402 payment infrastructure on Sui: put a price on any HTTP endpoint and let age
 
 Documentation: https://docs.blockpay.gg (source in [`docs/`](docs/README.md)).
 
+## Packages
+
+| Package | |
+| --- | --- |
+| [`@blockpay402/express`](https://www.npmjs.com/package/@blockpay402/express) | Charge from an Express app |
+| [`@blockpay402/next`](https://www.npmjs.com/package/@blockpay402/next) | Charge from Next.js / any Fetch-API runtime |
+| [`@blockpay402/server`](https://www.npmjs.com/package/@blockpay402/server) | Framework-agnostic resource-server handler |
+| [`@blockpay402/client`](https://www.npmjs.com/package/@blockpay402/client) | Paying `fetch`, Axios interceptor, channels |
+| [`@blockpay402/agent`](https://www.npmjs.com/package/@blockpay402/agent) | Agent wallet with budgets and approvals |
+| [`@blockpay402/facilitator`](https://www.npmjs.com/package/@blockpay402/facilitator) | Reference facilitator, SQLite store, test mock |
+| [`@blockpay402/sui`](https://www.npmjs.com/package/@blockpay402/sui) | Sui transaction builders, vouchers, channel reads |
+| [`@blockpay402/core`](https://www.npmjs.com/package/@blockpay402/core) | x402 v2 types, schemas, codecs, networks |
+
+```bash
+npm i @blockpay402/express    # charge
+npm i @blockpay402/client     # pay
+```
+
 ## Repository
 
 | Path | |

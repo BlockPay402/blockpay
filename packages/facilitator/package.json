@@ -22,7 +22,8 @@
       "types": "./dist/sqlite.d.ts",
       "import": "./dist/sqlite.js",
       "require": "./dist/sqlite.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
