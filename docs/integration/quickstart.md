@@ -30,13 +30,14 @@ app.use(
     network: 'sui:testnet',
     payTo: process.env.BLOCKPAY_PAY_TO!,
     routes: {
-      'GET /weather': { price: '$0.01', description: 'Current weather for a city' },
+      'GET /v1/credit/:companyId': { price: '$0.01', description: 'Business credit score' },
     },
   }),
 );
 
-app.get('/weather', (req, res) => {
-  res.json({ city: req.query.city ?? 'Hanoi', tempC: 31, paidBy: req.blockpay?.payer });
+// Your data, from your own provider or model. The numbers here are illustrative.
+app.get('/v1/credit/:companyId', (req, res) => {
+  res.json({ company: req.params.companyId, score: 712, band: 'A-', defaultProbability12m: 0.018, paidBy: req.blockpay?.payer });
 });
 
 app.listen(3000, () => console.log('listening on :3000'));
@@ -47,7 +48,7 @@ export BLOCKPAY_FACILITATOR_URL=https://facilitator.testnet.blockpay.gg
 export BLOCKPAY_API_KEY=bp_live_…        # from app.testnet.blockpay.gg
 export BLOCKPAY_PAY_TO=0x…               # the server's receiving address
 npx tsx server.ts
-curl -i "http://localhost:3000/weather?city=Hanoi"
+curl -i "http://localhost:3000/v1/credit/acme-trading-co"
 # HTTP/1.1 402 Payment Required
 # PAYMENT-REQUIRED: eyJ4NDAyVmVyc2lvbiI6Mi…
 ```
@@ -70,14 +71,14 @@ const pay = createPayingFetch({
   maxPerRequest: '$0.05', // refuse anything more expensive, before signing
 });
 
-const res = await pay('http://localhost:3000/weather?city=Hanoi');
+const res = await pay('http://localhost:3000/v1/credit/acme-trading-co');
 console.log(res.status, await res.json());
 console.log('paid in tx', getPaymentResponse(res)?.transaction);
 ```
 
 ```bash
 npx tsx client.ts
-# 200 { city: 'Hanoi', tempC: 31, paidBy: '0x…' }
+# 200 { company: 'acme-trading-co', score: 712, band: 'A-', defaultProbability12m: 0.018, paidBy: '0x…' }
 # paid in tx 7f3a…
 ```
 
@@ -90,6 +91,6 @@ npx tsx client.ts
 
 ### 5. Next
 
-* Charge less than a cent: see [channels](client-sdk.md#channels) — set the route price to `'$0.0005'` and the client pays with vouchers.
+* Charge less than a cent, e.g. per macroeconomic data point: see [channels](client-sdk.md#channels) — set the route price to `'$0.0005'` and the client pays with vouchers.
 * Give an agent a budget: [AI agents](agents.md).
 * Move to mainnet only after testing, and after reading the [Disclaimer](../disclaimer.md): set `network: 'sui:mainnet'`, use `https://facilitator.blockpay.gg` and an API key from [app.blockpay.gg](https://app.blockpay.gg).

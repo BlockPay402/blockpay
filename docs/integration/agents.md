@@ -23,7 +23,7 @@ const wallet = createAgentWallet({
   onSettled: (record) => audit.append(record),    // every attempt, paid or not
 });
 
-const res = await wallet.fetch('https://api.example.com/weather');
+const res = await wallet.fetch('https://api.example.com/v1/credit/acme-trading-co');
 ```
 
 * **Hard caps** are checked in code before anything is signed. Exceeding one throws `PaymentCapExceededError`.
@@ -65,7 +65,15 @@ const message = await client.beta.messages.toolRunner({
       run: async (input) => JSON.stringify(await payAndFetch.execute(input)),
     }),
   ],
-  messages: [{ role: 'user', content: 'What is the weather in Hanoi? Use https://api.example.com/weather?city=Hanoi' }],
+  messages: [
+    {
+      role: 'user',
+      content:
+        'Should we extend 90-day payment terms to Acme Trading Co.? Check its credit score at ' +
+        'https://api.example.com/v1/credit/acme-trading-co and Vietnam\'s latest CPI and policy rate at ' +
+        'https://api.example.com/v1/macro/VN/cpi and https://api.example.com/v1/macro/VN/policy-rate.',
+    },
+  ],
 });
 
 if (message.stop_reason === 'refusal') throw new Error('Request declined');

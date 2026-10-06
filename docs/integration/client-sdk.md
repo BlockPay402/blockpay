@@ -18,7 +18,7 @@ const pay = createPayingFetch({
   dailyCap: '$5',          // rolling 24h
 });
 
-const res = await pay('https://api.example.com/weather?city=Hanoi');
+const res = await pay('https://api.example.com/v1/macro/VN/cpi');
 const receipt = getPaymentResponse(res); // { success, transaction, network, payer, amount }
 ```
 
@@ -98,7 +98,7 @@ const api = attachPaymentInterceptor(axios.create({ baseURL: 'https://api.exampl
   network: 'sui:mainnet',
   maxPerRequest: '$0.05',
 });
-const { data } = await api.get('/weather', { params: { city: 'Hanoi' } });
+const { data } = await api.get('/v1/credit/acme-trading-co');
 ```
 
 ### Lower level

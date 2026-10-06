@@ -49,8 +49,8 @@ Returns `{ token, expiresAt, merchant }`. Sessions last 7 days.
   "data": [{
     "id": "pay_…", "scheme": "exact", "network": "sui:mainnet",
     "asset": "0xdba3…::usdc::USDC", "amount": "10000", "fee": "100",
-    "payer": "0x…", "payTo": "0x…", "resource": "https://api.example.com/weather",
-    "description": "Current weather", "transaction": "7f3a…", "channelId": null,
+    "payer": "0x…", "payTo": "0x…", "resource": "https://api.example.com/v1/credit/acme-trading-co",
+    "description": "Business credit score", "transaction": "7f3a…", "channelId": null,
     "status": "settled", "feeUsd": "0.0001", "createdAt": "2026-10-03T09:12:44.120Z"
   }],
   "nextBefore": 1759482764120

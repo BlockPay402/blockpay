@@ -15,9 +15,9 @@ app.use(
     payTo: '0x9c4e…a71f',
     serviceName: 'Acme Data',
     routes: {
-      'GET /weather': '$0.01',                                      // shorthand
-      'POST /summarize': { price: '$0.02', description: 'Summarize a document', maxTimeoutSeconds: 90 },
-      'GET /tiles/*': { price: '$0.0005' },                          // sub-cent: paid via channels
+      'GET /v1/credit/:companyId': '$0.01',                         // shorthand
+      'POST /v1/research/summarize': { price: '$0.02', description: 'Investment research summary', maxTimeoutSeconds: 90 },
+      'GET /v1/macro/*': { price: '$0.0005' },                       // sub-cent per data point: paid via channels
       'GET /datasets/:id': {
         price: (req) => DATASETS[req.params.id]?.price ?? null,      // null → free / pass through
         description: (req) => `Dataset ${req.params.id}`,
@@ -26,11 +26,11 @@ app.use(
   }),
 );
 
-app.get('/weather', (req, res) => {
+app.get('/v1/credit/:companyId', (req, res) => {
   req.blockpay?.payer;   // payer address
   req.blockpay?.amount;  // "10000"
   req.blockpay?.scheme;  // "exact" | "batch-settlement"
-  res.json({ tempC: 31 });
+  res.json({ company: req.params.companyId, score: 712, band: 'A-' });
 });
 ```
 
@@ -63,7 +63,7 @@ Buffering means streaming responses (SSE) are delivered after settlement. For st
 ### Next.js (and other Fetch-API runtimes)
 
 ```ts
-// app/api/weather/route.ts
+// app/api/macro/[country]/[indicator]/route.ts
 import { withPayment } from '@blockpay402/next';
 
 export const GET = withPayment(
@@ -71,10 +71,11 @@ export const GET = withPayment(
     facilitator: { url: process.env.BLOCKPAY_FACILITATOR_URL!, apiKey: process.env.BLOCKPAY_API_KEY },
     network: 'sui:mainnet',
     payTo: process.env.BLOCKPAY_PAY_TO!,
-    price: '$0.01',
-    description: 'Current weather',
+    price: '$0.0005',
+    description: 'Latest value of a macroeconomic indicator',
   },
-  async (req, { payment }) => Response.json({ tempC: 31, payer: payment?.payer }),
+  // Illustrative values: serve your own dataset.
+  async (req, { payment }) => Response.json({ country: 'VN', indicator: 'cpi_yoy', period: '2026-08', value: 3.1, unit: '%', payer: payment?.payer }),
 );
 ```
 

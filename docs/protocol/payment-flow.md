@@ -4,12 +4,12 @@ A payment is one HTTP exchange that loops once when payment is required.
 
 ```
 Client                    Resource server                Facilitator              Sui
-  │ 1. GET /weather            │                              │                     │
+  │ 1. GET /v1/credit/acme     │                              │                     │
   │───────────────────────────▶│                              │                     │
   │ 2. 402 + PAYMENT-REQUIRED  │                              │                     │
   │◀───────────────────────────│                              │                     │
   │ 3. sign payment            │                              │                     │
-  │ 4. GET /weather            │                              │                     │
+  │ 4. GET /v1/credit/acme     │                              │                     │
   │    PAYMENT-SIGNATURE       │                              │                     │
   │───────────────────────────▶│ 5. POST /verify              │                     │
   │                            │─────────────────────────────▶│ 6. simulate          │
@@ -42,7 +42,7 @@ The header is base64 JSON (the body repeats it for humans and `curl`):
 {
   "x402Version": 2,
   "error": "PAYMENT-SIGNATURE header is required",
-  "resource": { "url": "https://api.example.com/weather", "description": "Current weather" },
+  "resource": { "url": "https://api.example.com/v1/credit/acme-trading-co", "description": "Business credit score" },
   "accepts": [
     {
       "scheme": "exact",
@@ -82,7 +82,7 @@ The client picks an option, signs, and retries with `PAYMENT-SIGNATURE` — base
 ```json
 {
   "x402Version": 2,
-  "resource": { "url": "https://api.example.com/weather" },
+  "resource": { "url": "https://api.example.com/v1/credit/acme-trading-co" },
   "accepted": { "...the chosen PaymentRequirements, unchanged..." },
   "payload": { "transaction": "AAAC…", "signature": "AKz…" }
 }
