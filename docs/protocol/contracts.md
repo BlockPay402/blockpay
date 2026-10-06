@@ -74,7 +74,7 @@ Funds are paid with `balance::send_funds`, into the recipient's address balance.
 | Network | Package | Registry |
 | --- | --- | --- |
 | `sui:testnet` | [`0x2ea95b4e89bd9b06de0dba42061d83233eccbdf06d88ff011cd4b9e85a8499e4`](https://suiscan.xyz/testnet/object/0x2ea95b4e89bd9b06de0dba42061d83233eccbdf06d88ff011cd4b9e85a8499e4) | `0xbe4322c2ddef5534617dc80e93360d6a7c92a0d2b8b1535bbab37ab2b2f9c997` (shard 0 of 16; all shards in `deployments/testnet.json`) |
-| `sui:mainnet` | _after audit_ | _after audit_ |
+| `sui:mainnet` | [`0x270a878bd91a97830e4e399ad9343fb45f35904e1fa58782d22b9f5f09be222a`](https://suiscan.xyz/mainnet/object/0x270a878bd91a97830e4e399ad9343fb45f35904e1fa58782d22b9f5f09be222a) | `0x163e8384a8d5e82d5f56ad00cf94ff6459780a5ab42b00d8c7dbf1947652d99d` (shard 0 of 16; all shards in `deployments/mainnet.json`). **Not audited yet**; `UpgradeCap` held by a cold wallet until it is frozen after the audit. |
 
 The SDK trusts the deployments listed here without extra configuration. For a network not listed yet, configure the deployment explicitly in clients (`networks[network].channel`) and in the facilitator.
 
