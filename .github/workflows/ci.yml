@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  SUI_VERSION: mainnet-v1.80.1
+  SUI_VERSION: testnet-v1.81.0
 
 jobs:
   test:
@@ -29,7 +29,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Sui CLI
         run: |
-          curl -sfL "https://github.com/MystenLabs/sui/releases/download/${SUI_VERSION}/sui-${SUI_VERSION}-ubuntu-x86_64.tgz" | tar -xz -C /usr/local/bin sui
-          sui --version
-      - run: sui move test
+          mkdir -p "$RUNNER_TEMP/sui"
+          curl -sfL "https://github.com/MystenLabs/sui/releases/download/${SUI_VERSION}/sui-${SUI_VERSION}-ubuntu-x86_64.tgz" | tar -xz -C "$RUNNER_TEMP/sui" sui
+          echo "$RUNNER_TEMP/sui" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/sui/sui" --version
+      - run: sui move test -e testnet
         working-directory: contracts/blockpay
