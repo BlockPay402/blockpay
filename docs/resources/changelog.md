@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.1.1 — 2026-10-06
+
+* Same code as 0.1.0, published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements): each package links to the GitHub Actions build and commit it came from. Prefer 0.1.1 over 0.1.0.
+
 ### 0.1.0 — 2026-10-06
 
 First release on npm: `@blockpay402/core`, `sui`, `server`, `express`, `next`, `client`, `agent`, `facilitator`.

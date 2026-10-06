@@ -1,6 +1,6 @@
 {
   "name": "@blockpay402/client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Paying fetch / axios clients for x402 endpoints on Sui.",
   "license": "Apache-2.0",
   "type": "module",

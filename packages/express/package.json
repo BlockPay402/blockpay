@@ -1,6 +1,6 @@
 {
   "name": "@blockpay402/express",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Express middleware for BlockPay (x402 on Sui).",
   "license": "Apache-2.0",
   "type": "module",
