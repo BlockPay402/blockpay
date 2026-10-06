@@ -37,10 +37,14 @@ describe('SqliteStore', () => {
     expect(await store.acceptVoucher('0x1', 300n, 'sig300', 1)).toBe(true);
     expect(await store.acceptVoucher('0x1', 300n, 'sig300', 2)).toBe(false);
     expect(await store.acceptVoucher('0x1', 200n, 'sig200', 3)).toBe(false);
+    // F-03: two vouchers checked against the same older watermark must not both be accepted.
+    // At write time 301 is only 1 above 300, below the 100 price of the request it pays for.
+    expect(await store.acceptVoucher('0x1', 301n, 'sig301', 3, 100n)).toBe(false);
+    expect(await store.acceptVoucher('0x1', 400n, 'sig400', 3, 100n)).toBe(true);
     await store.putChannel({ ...record, deposited: '2000' }); // a refresh must not reset the watermark
-    expect((await store.getChannel('0x1'))).toMatchObject({ acceptedAmount: '300', acceptedSignature: 'sig300', deposited: '2000' });
+    expect((await store.getChannel('0x1'))).toMatchObject({ acceptedAmount: '400', acceptedSignature: 'sig400', deposited: '2000' });
     expect(await store.listRedeemable('sui:testnet')).toHaveLength(1);
-    await store.markClaimed('0x1', 300n, 'claim', false, 4);
+    await store.markClaimed('0x1', 400n, 'claim', false, 4);
     expect(await store.listRedeemable('sui:testnet')).toHaveLength(0);
   });
 });

@@ -25,7 +25,7 @@ export async function exitChannel(
   const sui = client.client(params.network);
   const deployment = params.deployment ?? resolveNetwork(params.network).channel;
   if (!deployment) throw new Error(`No channel deployment configured for ${params.network}`);
-  const channel: ChannelState | null = await getChannel(sui, params.channelId);
+  const channel: ChannelState | null = await getChannel(sui, params.channelId, deployment.packageId);
   if (!channel) return { state: 'closed' };
 
   if (channel.closeRequestedAtMs == null) {
@@ -33,7 +33,7 @@ export async function exitChannel(
     const result = await sui.core.signAndExecuteTransaction({ transaction: tx, signer: client.signer });
     if (result.$kind === 'FailedTransaction') throw new Error(`request_close failed: ${result.FailedTransaction.digest}`);
     await sui.core.waitForTransaction({ result });
-    const refreshed = await getChannel(sui, params.channelId);
+    const refreshed = await getChannel(sui, params.channelId, deployment.packageId);
     return {
       state: 'requested',
       withdrawableAtMs: (refreshed?.closeRequestedAtMs ?? BigInt(Date.now())) + channel.withdrawDelayMs,

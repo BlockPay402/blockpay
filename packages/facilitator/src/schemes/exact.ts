@@ -11,12 +11,22 @@ import {
 import { type ParsedTransaction, checkSponsorableCommands, parseTransaction } from '@blockpay402/sui';
 import { isValidTransactionSignature } from '@mysten/sui/verify';
 import type { NetworkContext } from '../context.js';
-import { EXECUTION_TIMEOUT_MS, executionFailureReason, isTransientError, verbatimSimulation } from './errors.js';
+import {
+  EXECUTION_TIMEOUT_MS,
+  executionFailureReason,
+  isTransientError,
+  sponsoredStorageError,
+  verbatimSimulation,
+} from './errors.js';
+
+type Simulation = Awaited<ReturnType<NetworkContext['client']['core']['simulateTransaction']>>;
 
 interface Checked {
   tx: ParsedTransaction;
   signature: string;
   sponsored: boolean;
+  /** Present for sponsored payments, which are always simulated before the sponsor co-signs. */
+  simulation?: Simulation;
 }
 
 type CheckResult = { ok: true; value: Checked } | { ok: false; reason: string; payer?: string };
@@ -37,11 +47,7 @@ export class ExactSuiScheme {
 
     if (await this.ctx.store.hasTransaction(tx.digest)) return invalid(ErrorReason.exactAlreadySettled, tx.sender);
 
-    const simulation = await this.ctx.client.core.simulateTransaction({
-      transaction: tx.bytes,
-      include: { balanceChanges: true },
-      ...verbatimSimulation,
-    });
+    const simulation = checked.value.simulation ?? (await this.simulate(tx));
     if (simulation.$kind === 'FailedTransaction') {
       return invalid(executionFailureReason(simulation.FailedTransaction.status), tx.sender);
     }
@@ -132,7 +138,26 @@ export class ExactSuiScheme {
         return { ok: false, reason: ErrorReason.exactSponsorPolicy, payer: tx.sender };
       }
     }
-    return { ok: true, value: { tx, signature: parsed.data.signature, sponsored } };
+    if (!sponsored) return { ok: true, value: { tx, signature: parsed.data.signature, sponsored } };
+
+    // Checked on settle too: a resource server may call /settle without /verify.
+    const simulation = await this.simulate(tx);
+    if (simulation.$kind === 'Transaction') {
+      const storageError = sponsoredStorageError(simulation.Transaction.effects?.gasUsed, this.ctx.sponsor.maxExactStorage);
+      if (storageError) {
+        this.ctx.logger.warn('exact.sponsor.rejected', { reason: storageError, payer: tx.sender });
+        return { ok: false, reason: ErrorReason.exactSponsorPolicy, payer: tx.sender };
+      }
+    }
+    return { ok: true, value: { tx, signature: parsed.data.signature, sponsored, simulation } };
+  }
+
+  private simulate(tx: ParsedTransaction) {
+    return this.ctx.client.core.simulateTransaction({
+      transaction: tx.bytes,
+      include: { balanceChanges: true, effects: true },
+      ...verbatimSimulation,
+    });
   }
 
   private sponsorPolicyError(tx: ParsedTransaction): string | null {
@@ -140,7 +165,7 @@ export class ExactSuiScheme {
     if (tx.gasOwner !== normalizeAddress(this.ctx.address)) return 'gas owner is not this facilitator';
     if (tx.gasPayment.length !== 0) return 'sponsored gas must come from the address balance';
     if (tx.gasBudget > this.ctx.sponsor.maxGasBudget) return 'gas budget too high';
-    return checkSponsorableCommands(tx.data);
+    return checkSponsorableCommands(tx.data, [], this.ctx.sponsor.maxCommands);
   }
 }
 

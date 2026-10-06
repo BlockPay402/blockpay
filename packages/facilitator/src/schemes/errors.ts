@@ -21,3 +21,20 @@ export const verbatimSimulation = { doGasSelection: false } as {};
 
 /** Upper bound for broadcasting; keeps /settle well inside a resource server's HTTP timeout. */
 export const EXECUTION_TIMEOUT_MS = 20_000;
+
+/** Gas summary of a simulated transaction, as the gRPC client reports it. */
+export interface GasUsed {
+  computationCost: string;
+  storageCost: string;
+  storageRebate: string;
+}
+
+/**
+ * A sponsor must not pay to store objects the payer keeps: deleting them later refunds ~99% of the
+ * fee to the deleter. Reject when the net storage fee exceeds `limit` (MIST).
+ */
+export function sponsoredStorageError(gasUsed: GasUsed | undefined, limit: bigint): string | null {
+  if (!gasUsed) return 'simulation reported no gas usage';
+  const net = BigInt(gasUsed.storageCost) - BigInt(gasUsed.storageRebate);
+  return net > limit ? `net storage fee ${net} MIST exceeds the sponsor limit of ${limit}` : null;
+}

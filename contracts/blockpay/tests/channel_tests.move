@@ -289,3 +289,133 @@ fun rejects_empty_deposit() {
     channel::open(&mut registry, PAYEE, OPERATOR, AUTHORIZER, DELAY_MS, NONCE, balance::zero<SUI>(), s.ctx());
     abort
 }
+
+// === Audit follow-ups (C-02, C-03, C-06) ===
+
+const MAX_DELAY_MS: u64 = 2_592_000_000;
+
+#[test]
+fun accepts_the_longest_delay() {
+    let mut s = setup();
+    s.next_tx(PAYER);
+    let mut registry = s.take_shared<Registry>();
+    channel::open(&mut registry, PAYEE, OPERATOR, AUTHORIZER, MAX_DELAY_MS, NONCE, balance::create_for_testing<SUI>(1), s.ctx());
+    ts::return_shared(registry);
+    s.end();
+}
+
+#[test, expected_failure(abort_code = channel::EInvalidWithdrawDelay)]
+fun rejects_a_delay_above_thirty_days() {
+    let mut s = setup();
+    s.next_tx(PAYER);
+    let mut registry = s.take_shared<Registry>();
+    channel::open(&mut registry, PAYEE, OPERATOR, AUTHORIZER, MAX_DELAY_MS + 1, NONCE, balance::create_for_testing<SUI>(1), s.ctx());
+    abort
+}
+
+#[test, expected_failure(abort_code = channel::ENotPayer)]
+fun only_payer_withdraws() {
+    let mut s = setup();
+    let id = open_channel(&mut s, 1000);
+    s.next_tx(PAYER);
+    let mut clock = clock::create_for_testing(s.ctx());
+    let mut ch = s.take_shared_by_id<Channel<SUI>>(id);
+    ch.request_close(&clock, s.ctx());
+    ts::return_shared(ch);
+    clock.set_for_testing(DELAY_MS);
+    // The payee (or anyone else) cannot take the refund path.
+    s.next_tx(PAYEE);
+    let ch = s.take_shared_by_id<Channel<SUI>>(id);
+    ch.withdraw(&clock, s.ctx());
+    abort
+}
+
+#[test]
+fun request_close_twice_keeps_the_first_timestamp() {
+    let mut s = setup();
+    let id = open_channel(&mut s, 1000);
+    s.next_tx(PAYER);
+    let mut clock = clock::create_for_testing(s.ctx());
+    clock.set_for_testing(5_000);
+    let mut ch = s.take_shared_by_id<Channel<SUI>>(id);
+    ch.request_close(&clock, s.ctx());
+    clock.set_for_testing(9_000);
+    ch.request_close(&clock, s.ctx()); // must not push the withdraw time back
+    assert!(ch.close_requested_at_ms() == option::some(5_000));
+    ts::return_shared(ch);
+    clock.destroy_for_testing();
+    s.end();
+}
+
+#[test, expected_failure(abort_code = channel::EInvalidSignature)]
+fun claim_rejects_a_truncated_signature() {
+    let mut s = setup();
+    let id = open_channel(&mut s, 1000);
+    s.next_tx(PAYEE);
+    let mut ch = s.take_shared_by_id<Channel<SUI>>(id);
+    let mut short = SIG_300;
+    short.pop_back();
+    ch.claim(300, short);
+    abort
+}
+
+#[test, expected_failure(abort_code = channel::EInvalidSignature)]
+fun claim_rejects_an_empty_signature() {
+    let mut s = setup();
+    let id = open_channel(&mut s, 1000);
+    s.next_tx(PAYEE);
+    let mut ch = s.take_shared_by_id<Channel<SUI>>(id);
+    ch.claim(300, vector[]);
+    abort
+}
+
+#[test]
+fun claim_of_the_whole_deposit_leaves_nothing_to_refund() {
+    let mut s = setup();
+    let id = open_channel(&mut s, 1000);
+    s.next_tx(OPERATOR);
+    let mut ch = s.take_shared_by_id<Channel<SUI>>(id);
+    ch.claim(1000, SIG_1000);
+    assert!(ch.balance() == 0 && ch.claimed() == 1000);
+    // C-03: the operator closes only after redeeming; with nothing left, no refund is sent.
+    ch.close(s.ctx());
+    let effects = s.next_tx(OPERATOR);
+    assert!(effects.deleted().contains(&id));
+    s.end();
+}
+
+#[test]
+fun init_creates_every_registry_shard() {
+    let mut s = ts::begin(ADMIN);
+    channel::init_all_shards_for_testing(s.ctx());
+    let effects = s.next_tx(ADMIN);
+    let shared = effects.shared();
+    assert!(shared.length() == channel::registry_shards());
+    let mut seen = vector[];
+    shared.do_ref!(|registry_id| {
+        let registry = s.take_shared_by_id<Registry>(*registry_id);
+        assert!(!seen.contains(&registry.shard()));
+        seen.push_back(registry.shard());
+        ts::return_shared(registry);
+    });
+    s.end();
+}
+
+#[test]
+fun channels_on_different_shards_get_different_ids() {
+    let mut s = ts::begin(ADMIN);
+    channel::init_all_shards_for_testing(s.ctx());
+    let effects = s.next_tx(PAYER);
+    let shared = effects.shared();
+    let mut a = s.take_shared_by_id<Registry>(shared[0]);
+    let mut b = s.take_shared_by_id<Registry>(shared[1]);
+    // The same (payer, nonce) is a different channel under each shard, and `channel_id` predicts it.
+    let id_a = channel::open(&mut a, PAYEE, OPERATOR, AUTHORIZER, DELAY_MS, NONCE, balance::create_for_testing<SUI>(1), s.ctx());
+    let id_b = channel::open(&mut b, PAYEE, OPERATOR, AUTHORIZER, DELAY_MS, NONCE, balance::create_for_testing<SUI>(1), s.ctx());
+    assert!(id_a != id_b);
+    assert!(channel::channel_id(&a, PAYER, NONCE) == id_a);
+    assert!(channel::channel_id(&b, PAYER, NONCE) == id_b);
+    ts::return_shared(a);
+    ts::return_shared(b);
+    s.end();
+}

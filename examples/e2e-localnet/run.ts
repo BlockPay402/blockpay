@@ -183,7 +183,7 @@ async function main() {
     await expectStatus(res, 200);
     const [entry] = await channelClient.listChannels();
     assert(entry, 'no channel recorded');
-    const onChain = await getChannel(sui, entry.channelId);
+    const onChain = await getChannel(sui, entry.channelId, channel.packageId);
     assert(onChain && onChain.deposited === 5000n && onChain.payee === merchant.toLowerCase(), 'channel state');
     return `channel ${entry.channelId.slice(0, 12)}…`;
   });
@@ -204,7 +204,7 @@ async function main() {
     const res = await channelFetch(`${api}/micro`); // cumulative 6000 > deposit 5000
     await expectStatus(res, 200);
     const [entry] = await channelClient.listChannels();
-    const onChain = await getChannel(sui, entry!.channelId);
+    const onChain = await getChannel(sui, entry!.channelId, channel.packageId);
     assert(onChain && onChain.deposited > 5000n, `deposit ${onChain?.deposited}`);
   });
 

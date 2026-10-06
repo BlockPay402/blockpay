@@ -1,0 +1,10 @@
+{
+  "network": "sui:testnet",
+  "packageId": "0x84443af24c3b4fdfc5dc3df15d1cb11c6c0f00434890d58cf0188c6a5eb8083e",
+  "registryId": "0x96dbbded5ab4bf48bfc3643b57ef1d18c156b28475506e8a182564f25ddab228",
+  "upgradeCapId": "0x6f5b846fa020077f2d592254b9634c82f147a46f8baae3f86889e30f550fcf6a",
+  "publisher": "0x2c69a9f2d37bd2bed4408fdd6698857df386ffdeda7c7e15506fc42f409459cf",
+  "digest": "HQUuphJsNFsdSVEYzuGfEBrhNXzDgia7gNwdHD4i6hZ4",
+  "publishedAt": "2026-10-05T11:22:13.996Z",
+  "immutable": false
+}

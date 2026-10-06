@@ -17,8 +17,18 @@ export interface SponsorPolicy {
   exact: boolean;
   /** Sponsor gas for channel open / top-up. Default true. */
   channels: boolean;
-  /** Highest gas budget the sponsor will co-sign, in MIST. Default 0.05 SUI. */
+  /** Highest gas budget the sponsor will co-sign, in MIST. Default 0.01 SUI (what clients set). */
   maxGasBudget: bigint;
+  /** Most commands a sponsored transaction may contain. Default 16. */
+  maxCommands: number;
+  /**
+   * Highest net storage fee (storage cost minus rebate, in MIST) the sponsor pays for an `exact`
+   * payment. Storage fees are refunded to whoever later deletes the objects, so a sponsor that pays
+   * for arbitrary new objects can be drained. Default 2,000,000 (a canonical payment uses ≤ 1M).
+   */
+  maxExactStorage: bigint;
+  /** Same, for channel open / top-up (an open stores the channel: ~6.4M net). Default 10,000,000. */
+  maxChannelStorage: bigint;
 }
 
 /** Everything a scheme needs for one network. */

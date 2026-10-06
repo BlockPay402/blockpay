@@ -33,8 +33,12 @@ export interface FacilitatorStore {
   getChannel(channelId: string): Promise<ChannelRecord | null>;
   /** Insert or update a channel's on-chain view. Must not move `acceptedAmount` backwards. */
   putChannel(record: ChannelRecord): Promise<void>;
-  /** Atomically raise the watermark. False unless `cumulative` exceeds the current one. */
-  acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number): Promise<boolean>;
+  /**
+   * Atomically raise the watermark. False unless `cumulative` exceeds the current watermark by at
+   * least `minIncrement` (the price), checked against the value at write time: two concurrent
+   * vouchers must not both pass a check made against the same older watermark.
+   */
+  acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number, minIncrement?: bigint): Promise<boolean>;
   /** Channels with accepted value not yet redeemed on-chain. */
   listRedeemable(network: string): Promise<ChannelRecord[]>;
   markClaimed(channelId: string, claimed: bigint, digest: string, closed: boolean, at: number): Promise<void>;
@@ -71,9 +75,9 @@ export class MemoryStore implements FacilitatorStore {
     this.channels.set(record.channelId, { ...record });
   }
 
-  async acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number) {
+  async acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number, minIncrement = 1n) {
     const record = this.channels.get(channelId);
-    if (!record || cumulative <= BigInt(record.acceptedAmount)) return false;
+    if (!record || !raisesBy(BigInt(record.acceptedAmount), cumulative, minIncrement)) return false;
     record.acceptedAmount = cumulative.toString();
     record.acceptedSignature = signature;
     record.lastVoucherAt = at;
@@ -96,4 +100,9 @@ export class MemoryStore implements FacilitatorStore {
     record.lastClaimDigest = digest;
     if (closed) record.status = 'closed';
   }
+}
+
+/** True when `cumulative` is above `watermark` by at least `minIncrement` (and at least 1). */
+export function raisesBy(watermark: bigint, cumulative: bigint, minIncrement: bigint): boolean {
+  return cumulative > watermark && cumulative - watermark >= minIncrement;
 }

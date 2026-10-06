@@ -26,7 +26,13 @@ import {
 import { isValidTransactionSignature } from '@mysten/sui/verify';
 import type { NetworkContext } from '../context.js';
 import type { ChannelRecord } from '../store.js';
-import { EXECUTION_TIMEOUT_MS, executionFailureReason, isTransientError, verbatimSimulation } from './errors.js';
+import {
+  EXECUTION_TIMEOUT_MS,
+  executionFailureReason,
+  isTransientError,
+  sponsoredStorageError,
+  verbatimSimulation,
+} from './errors.js';
 
 type Fail = { ok: false; reason: string; payer?: string };
 type Funding = { tx: ParsedTransaction; signature: string; sponsored: boolean; record: ChannelRecord };
@@ -80,6 +86,7 @@ export class BatchSettlementSuiScheme {
       BigInt(voucher.cumulativeAmount),
       voucher.signature,
       now,
+      BigInt(requirements.amount),
     );
     if (!accepted) return { ...base, success: false, errorReason: ErrorReason.batchVoucherStale, payer };
 
@@ -166,7 +173,7 @@ export class BatchSettlementSuiScheme {
     const cached = await this.ctx.store.getChannel(channelId);
     const fresh = Date.now() - (this.refreshedAt.get(channelId) ?? 0) < this.ctx.channelStateTtlMs;
     if (cached && fresh && cached.status === 'open' && cumulative <= BigInt(cached.deposited)) return cached;
-    const onChain = await getChannel(this.ctx.client, channelId);
+    const onChain = await getChannel(this.ctx.client, channelId, this.deployment.packageId);
     this.refreshedAt.set(channelId, Date.now());
     if (!onChain) {
       if (cached && cached.status !== 'closed') await this.ctx.store.putChannel({ ...cached, status: 'closed' });
@@ -225,7 +232,11 @@ export class BatchSettlementSuiScheme {
               ? 'sponsored gas must come from the address balance'
               : tx.gasBudget > this.ctx.sponsor.maxGasBudget
                 ? 'gas budget too high'
-                : checkSponsorableCommands(tx.data, [`${pkg}::channel::open`, `${pkg}::channel::top_up`]);
+                : checkSponsorableCommands(
+                    tx.data,
+                    [`${pkg}::channel::open`, `${pkg}::channel::top_up`],
+                    this.ctx.sponsor.maxCommands,
+                  );
       if (policyError) {
         this.ctx.logger.warn('batch.sponsor.rejected', { reason: policyError, payer: tx.sender });
         return { ok: false, reason: ErrorReason.exactSponsorPolicy, payer: tx.sender };
@@ -237,11 +248,18 @@ export class BatchSettlementSuiScheme {
 
     const simulation = await this.ctx.client.core.simulateTransaction({
       transaction: tx.bytes,
-      include: { events: true },
+      include: { events: true, effects: true },
       ...verbatimSimulation,
     });
     if (simulation.$kind === 'FailedTransaction') {
       return { ok: false, reason: executionFailureReason(simulation.FailedTransaction.status), payer: tx.sender };
+    }
+    if (sponsored) {
+      const storageError = sponsoredStorageError(simulation.Transaction.effects?.gasUsed, this.ctx.sponsor.maxChannelStorage);
+      if (storageError) {
+        this.ctx.logger.warn('batch.sponsor.rejected', { reason: storageError, payer: tx.sender });
+        return { ok: false, reason: ErrorReason.exactSponsorPolicy, payer: tx.sender };
+      }
     }
     const events = simulation.Transaction.events ?? [];
     const channelId = normalizeAddress(payload.channelId);
@@ -264,6 +282,11 @@ export class BatchSettlementSuiScheme {
         BigInt(event.data.withdraw_delay_ms) < BigInt(extra.withdrawDelayMs)
       ) {
         return { ok: false, reason: ErrorReason.batchOpenTransaction, payer: tx.sender };
+      }
+      // A sponsored open stores a channel at the sponsor's expense: require a real deposit.
+      if (sponsored && extra.minDeposit && BigInt(event.data.deposit) < BigInt(extra.minDeposit)) {
+        this.ctx.logger.warn('batch.sponsor.rejected', { reason: 'deposit below minDeposit', payer: tx.sender });
+        return { ok: false, reason: ErrorReason.exactSponsorPolicy, payer: tx.sender };
       }
       record = {
         channelId,

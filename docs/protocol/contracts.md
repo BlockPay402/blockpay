@@ -2,14 +2,14 @@
 
 ### `blockpay::channel`
 
-Payment channels for [`batch-settlement`](schemes/batch-settlement.md). Source: `contracts/blockpay/sources/channel.move`. 19 unit tests, including shared test vectors with the TypeScript SDK.
+Payment channels for [`batch-settlement`](schemes/batch-settlement.md). Source: `contracts/blockpay/sources/channel.move`. 28 unit tests, including shared test vectors with the TypeScript SDK.
 
-The package has **no admin capability and no upgrade-dependent logic**. Plan: publish to testnet now; after an audit, publish to mainnet and make the package immutable.
+The package has **no admin capability and no version gating**. Because of that, an upgrade could not fix a vulnerability: the old functions stay callable on existing objects. The publish script therefore either makes the package immutable (`--freeze`) or hands the `UpgradeCap` to a multisig (`--upgrade-cap-to`); on mainnet one of the two is required.
 
 #### Objects
 
 ```move
-public struct Registry has key { id: UID }      // shared; parent of all channel IDs
+public struct Registry has key { id: UID, shard: u64 }   // shared; parent of channel IDs (16 shards)
 
 public struct Channel<phantom T> has key {      // shared
     id: UID,
@@ -37,12 +37,21 @@ public struct Channel<phantom T> has key {      // shared
 | `withdraw<T>(channel, clock)` | payer | After the delay: refunds and deletes. |
 | `voucher_message(channel_id, cumulative): vector<u8>` | view | The exact bytes a voucher signs. |
 | `channel_id(registry, payer, nonce): ID` | view | The ID a channel will have. |
+| `shard(registry): u64`, `registry_shards(): u64` | view | Which shard a registry is; how many exist. |
+
+#### Registry shards
+
+`open` needs `&mut Registry`, so every open is sequenced through the registry it uses. `init` creates 16 registries so channel opens do not contend on one shared object. Clients pick the shard from the payer address (`registryFor` in `@blockpay402/sui`: `payer mod 16`); any shard is valid as long as the ID is derived under the same one. Deployments list them as `registryIds` (shard order); `registryId` is shard 0 and identifies the deployment in `batch-settlement` requirements.
+
+#### Reading channels safely
+
+Anyone can publish a module named `channel` with a look-alike `Channel` struct. Off-chain code must only accept objects whose type is `<packageId>::channel::Channel<T>` for the trusted package: `getChannel(client, channelId, packageId)` enforces this.
 
 Funds are paid with `balance::send_funds`, into the recipient's address balance.
 
 #### Events
 
-`ChannelOpened<T>`, `ChannelToppedUp<T>`, `ChannelClaimed<T>`, `ChannelCloseRequested<T>`, `ChannelClosed<T>`. The coin type is the event's type parameter.
+`RegistryCreated` (once per shard, at publish), `ChannelOpened<T>`, `ChannelToppedUp<T>`, `ChannelClaimed<T>`, `ChannelCloseRequested<T>`, `ChannelClosed<T>`. The coin type is the event's type parameter.
 
 #### Errors
 
@@ -64,7 +73,7 @@ Funds are paid with `balance::send_funds`, into the recipient's address balance.
 
 | Network | Package | Registry |
 | --- | --- | --- |
-| `sui:testnet` | [`0x84443af24c3b4fdfc5dc3df15d1cb11c6c0f00434890d58cf0188c6a5eb8083e`](https://suiscan.xyz/testnet/object/0x84443af24c3b4fdfc5dc3df15d1cb11c6c0f00434890d58cf0188c6a5eb8083e) | `0x96dbbded5ab4bf48bfc3643b57ef1d18c156b28475506e8a182564f25ddab228` |
+| `sui:testnet` | [`0x2ea95b4e89bd9b06de0dba42061d83233eccbdf06d88ff011cd4b9e85a8499e4`](https://suiscan.xyz/testnet/object/0x2ea95b4e89bd9b06de0dba42061d83233eccbdf06d88ff011cd4b9e85a8499e4) | `0xbe4322c2ddef5534617dc80e93360d6a7c92a0d2b8b1535bbab37ab2b2f9c997` (shard 0 of 16; all shards in `deployments/testnet.json`) |
 | `sui:mainnet` | _after audit_ | _after audit_ |
 
 The SDK trusts the deployments listed here without extra configuration. For a network not listed yet, configure the deployment explicitly in clients (`networks[network].channel`) and in the facilitator.

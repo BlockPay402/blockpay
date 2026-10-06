@@ -68,7 +68,17 @@ The facilitator's key pays gas for:
 * channel open and top-up;
 * voucher redemption.
 
-It pays from its **address balance**, so sponsorship needs no coin selection and no extra round trip. Policy: only framework coin/balance calls (plus `channel::open` / `top_up`), never the gas coin, gas budget ≤ 0.05 SUI by default. Keep the sponsor funded and monitor `/health`.
+It pays from its **address balance**, so sponsorship needs no coin selection and no extra round trip. Policy (`sponsor` in the facilitator config):
+
+| Rule | Default | Why |
+| --- | --- | --- |
+| Only framework coin/balance calls, plus `channel::open` / `top_up`; never the gas coin | — | The sponsor must not pay for arbitrary programs. |
+| `maxGasBudget` | 0.01 SUI | What clients set; caps the cost of one transaction. |
+| `maxCommands` | 16 | A payment needs a handful of commands. |
+| `maxExactStorage` / `maxChannelStorage` (net storage fee, MIST) | 2,000,000 / 10,000,000 | Storage fees are refunded to whoever deletes the objects later; a sponsor paying for objects the payer keeps can be drained. Checked by simulation on verify **and** settle. |
+| Sponsored `open` deposit ≥ `minDeposit` | route's `minDeposit` | A sponsored open stores a channel at the sponsor's expense. |
+
+Keep the sponsor funded and monitor `/health`. Hosted platforms should charge at least the sponsor's gas for sponsored payments (`BLOCKPAY_SPONSORED_FEE_USD`).
 
 ### Hosted or self-hosted
 

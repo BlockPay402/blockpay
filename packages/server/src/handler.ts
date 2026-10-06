@@ -143,6 +143,9 @@ export class PaymentHandler {
     } catch {
       return { kind: 'invalid', ...this.result(400, paymentRequired, ErrorReason.invalidPayload) };
     }
+    // The payer chose `resource`; describe what this server is actually selling instead, so a
+    // payer cannot write arbitrary URLs or text into the merchant's payment records.
+    payload = { ...payload, resource: paymentRequired.resource };
     const requirements = findMatchingRequirements(paymentRequired.accepts, payload.accepted);
     if (!requirements) return this.paymentRequired(paymentRequired, ErrorReason.requirementsMismatch);
 

@@ -43,10 +43,15 @@ export async function publishChannelPackage(publisher: Ed25519Keypair) {
   if (result.$kind !== 'Transaction') throw new Error('publish failed');
   const { effects, objectTypes } = result.Transaction;
   const packageId = effects.changedObjects.find((o) => o.outputState === 'PackageWrite')?.objectId;
-  const registryId = Object.entries(objectTypes).find(([, type]) => type.endsWith('::channel::Registry'))?.[0];
+  // Every registry shard; any fixed order works as long as the client derives with the same list.
+  const registryIds = Object.entries(objectTypes)
+    .filter(([, type]) => type.endsWith('::channel::Registry'))
+    .map(([id]) => id)
+    .sort();
+  const registryId = registryIds[0];
   if (!packageId || !registryId) throw new Error('package or registry not found in publish effects');
   await sui.core.waitForTransaction({ result });
-  return { packageId, registryId };
+  return { packageId, registryId, registryIds };
 }
 
 /** Sponsoring from an address balance needs SUI there, not in coin objects. */

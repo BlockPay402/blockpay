@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite';
-import type { ChannelRecord, FacilitatorStore } from './store.js';
+import { type ChannelRecord, type FacilitatorStore, raisesBy } from './store.js';
 
 type Db = DatabaseSync;
 
@@ -149,12 +149,12 @@ export class SqliteStore implements FacilitatorStore {
     });
   }
 
-  async acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number) {
+  async acceptVoucher(channelId: string, cumulative: bigint, signature: string, at: number, minIncrement = 1n) {
     return transaction(this.db, () => {
       const row = this.db.prepare('SELECT accepted_amount FROM fx_channels WHERE channel_id = ?').get(channelId) as
         | Row
         | undefined;
-      if (!row || cumulative <= BigInt(row.accepted_amount as string)) return false;
+      if (!row || !raisesBy(BigInt(row.accepted_amount as string), cumulative, minIncrement)) return false;
       this.db
         .prepare('UPDATE fx_channels SET accepted_amount = ?, accepted_signature = ?, last_voucher_at = ? WHERE channel_id = ?')
         .run(cumulative.toString(), signature, at, channelId);

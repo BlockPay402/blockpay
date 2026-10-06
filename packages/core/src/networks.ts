@@ -3,7 +3,13 @@ import type { SuiNetwork } from './types.js';
 
 export interface ChannelDeployment {
   packageId: string;
+  /** Registry shard 0. Identifies the deployment in `batch-settlement` requirements (`channelRegistry`). */
   registryId: string;
+  /**
+   * Every registry shard, in shard order (`registryIds[0]` is `registryId`). Payers are spread
+   * across shards so channel opens do not all contend on one shared object. Absent: one registry.
+   */
+  registryIds?: readonly string[];
 }
 
 export interface SuiNetworkConfig {

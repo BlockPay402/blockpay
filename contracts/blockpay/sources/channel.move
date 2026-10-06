@@ -11,10 +11,15 @@
 /// (close / withdraw), so neither the facilitator nor the voucher key can redirect
 /// them.
 ///
-/// Channel IDs are derived from the shared `Registry` and `(payer, nonce)`, so a
+/// Channel IDs are derived from a shared `Registry` and `(payer, nonce)`, so a
 /// client can compute the ID - and sign its first voucher - before the opening
 /// transaction executes. A derived ID can never be claimed twice, even after the
 /// channel is deleted, so vouchers cannot be replayed against a later channel.
+///
+/// `open` needs `&mut Registry`, so every open is sequenced through the registry it
+/// uses. To keep one hot shared object from limiting how fast channels can open,
+/// `init` creates `REGISTRY_SHARDS` registries; clients spread payers across them
+/// (any shard is valid, the client just has to use the same one to derive the ID).
 module blockpay::channel;
 
 use sui::balance::{Self, Balance};
@@ -58,12 +63,15 @@ const MIN_WITHDRAW_DELAY_MS: u64 = 900_000;
 /// 30 days.
 const MAX_WITHDRAW_DELAY_MS: u64 = 2_592_000_000;
 const ED25519_PUBLIC_KEY_LENGTH: u64 = 32;
+/// Registries created at publish time. Opens on different shards do not contend.
+const REGISTRY_SHARDS: u64 = 16;
 
 // === Structs ===
 
-/// Shared parent that namespaces channel IDs.
+/// Shared parent that namespaces channel IDs. One of `REGISTRY_SHARDS`.
 public struct Registry has key {
     id: UID,
+    shard: u64,
 }
 
 /// Key a channel ID is derived from. Unique per payer and nonce.
@@ -91,6 +99,12 @@ public struct Channel<phantom T> has key {
 }
 
 // === Events ===
+
+/// Emitted once per shard at publish time, so deployments can list registries in shard order.
+public struct RegistryCreated has copy, drop {
+    registry_id: ID,
+    shard: u64,
+}
 
 public struct ChannelOpened<phantom T> has copy, drop {
     channel_id: ID,
@@ -129,7 +143,17 @@ public struct ChannelClosed<phantom T> has copy, drop {
 }
 
 fun init(ctx: &mut TxContext) {
-    transfer::share_object(Registry { id: object::new(ctx) });
+    create_registries(REGISTRY_SHARDS, ctx);
+}
+
+fun create_registries(count: u64, ctx: &mut TxContext) {
+    let mut shard = 0;
+    while (shard < count) {
+        let id = object::new(ctx);
+        event::emit(RegistryCreated { registry_id: id.to_inner(), shard });
+        transfer::share_object(Registry { id, shard });
+        shard = shard + 1;
+    };
 }
 
 // === Payer ===
@@ -263,6 +287,11 @@ public fun channel_id(registry: &Registry, payer: address, nonce: u64): ID {
     derived_object::derive_address(registry.id.to_inner(), ChannelKey { payer, nonce }).to_id()
 }
 
+/// Which of the `REGISTRY_SHARDS` registries this is.
+public fun shard(registry: &Registry): u64 { registry.shard }
+
+public fun registry_shards(): u64 { REGISTRY_SHARDS }
+
 public fun payer<T>(channel: &Channel<T>): address { channel.payer }
 
 public fun payee<T>(channel: &Channel<T>): address { channel.payee }
@@ -304,7 +333,15 @@ fun destroy<T>(channel: Channel<T>) {
     id.delete();
 }
 
+/// Creates only shard 0, so tests can `take_shared<Registry>()` it (and the shared test vectors,
+/// derived from the first registry created, stay valid).
 #[test_only]
 public fun init_for_testing(ctx: &mut TxContext) {
+    create_registries(1, ctx);
+}
+
+/// The real `init`: all `REGISTRY_SHARDS` registries.
+#[test_only]
+public fun init_all_shards_for_testing(ctx: &mut TxContext) {
     init(ctx);
 }

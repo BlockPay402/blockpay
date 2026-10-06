@@ -84,6 +84,20 @@ describe('express middleware (mock facilitator)', () => {
     expect((await required('/big')).accepts[0]!.extra?.gasless).toBe(true);
   });
 
+  it('forwards the server\'s own resource, not the one the payer sent (P-02)', async () => {
+    const required0 = await required('/weather');
+    const spoofed = encodePaymentPayload({
+      x402Version: 2,
+      resource: { url: '=HYPERLINK("https://evil.example")', description: 'not what you sold' },
+      accepted: required0.accepts[0]!,
+      payload: { transaction: 'AAAA', signature: 'AAAA' },
+    });
+    const res = await fetch(`${base}/weather`, { headers: { [HEADERS.paymentSignature]: spoofed } });
+    expect(res.status).toBe(200);
+    const forwarded = mock.verifications.at(-1)!.paymentPayload.resource;
+    expect(forwarded).toMatchObject({ url: `${base}/weather`, description: 'Weather' });
+  });
+
   it('serves and settles a paid request', async () => {
     const header = payFor(await required('/weather'));
     const before = mock.settlements.length;

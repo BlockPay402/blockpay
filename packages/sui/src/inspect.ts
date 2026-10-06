@@ -38,7 +38,9 @@ export async function parseTransaction(base64: string): Promise<ParsedTransactio
 export function checkSponsorableCommands(
   data: ParsedTransaction['data'],
   allowedTargets: readonly string[] = [],
+  maxCommands = 16,
 ): string | null {
+  if (data.commands.length > maxCommands) return `Sponsored transactions are limited to ${maxCommands} commands`;
   const allowed = new Set(allowedTargets.map(normalizeTarget));
   for (const command of data.commands) {
     switch (command.$kind) {

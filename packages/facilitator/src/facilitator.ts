@@ -103,7 +103,10 @@ export class Facilitator implements FacilitatorClient {
     const sponsor: SponsorPolicy = {
       exact: config.sponsor?.exact ?? true,
       channels: config.sponsor?.channels ?? true,
-      maxGasBudget: config.sponsor?.maxGasBudget ?? 50_000_000n,
+      maxGasBudget: config.sponsor?.maxGasBudget ?? 10_000_000n,
+      maxCommands: config.sponsor?.maxCommands ?? 16,
+      maxExactStorage: config.sponsor?.maxExactStorage ?? 2_000_000n,
+      maxChannelStorage: config.sponsor?.maxChannelStorage ?? 10_000_000n,
     };
     const redeemPolicy = { ...defaultRedeemPolicy, ...config.redeem };
 

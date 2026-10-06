@@ -348,7 +348,7 @@ export class PaymentClient {
             if (ok && settlement?.success) {
               await this.channels.set({ ...entry, cumulative: payload.cumulativeAmount });
             } else if (payload.type !== 'voucher') {
-              await this.reconcile(network, key, entry, existing);
+              await this.reconcile(network, deployment.packageId, key, entry, existing);
             } else if (isChannelUnusable(settlement)) {
               await this.abandon(entry);
               return { ...(await this.record(url, requirements, settlement, ok)), retryable: true };
@@ -386,8 +386,14 @@ export class PaymentClient {
   }
 
   /** After a failed open/top-up, trust the chain: keep the channel only if it exists, with its real deposit. */
-  private async reconcile(network: SuiNetwork, key: string, entry: ChannelEntry, previous: ChannelEntry | undefined) {
-    const onChain = await getChannel(this.client(network), entry.channelId).catch(() => undefined);
+  private async reconcile(
+    network: SuiNetwork,
+    packageId: string,
+    key: string,
+    entry: ChannelEntry,
+    previous: ChannelEntry | undefined,
+  ) {
+    const onChain = await getChannel(this.client(network), entry.channelId, packageId).catch(() => undefined);
     if (onChain === null) {
       await this.channels.delete(key);
     } else if (onChain) {

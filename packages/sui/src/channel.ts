@@ -56,10 +56,21 @@ export async function verifyVoucher(params: {
 
 const ChannelKeyBcs = bcs.struct('ChannelKey', { payer: bcs.Address, nonce: bcs.u64() });
 
+/** The registry shard a payer opens channels in: stable per payer, spread evenly across shards. */
+export function registryFor(deployment: ChannelDeployment, payer: string): string {
+  const shards = deployment.registryIds;
+  if (!shards?.length) return deployment.registryId;
+  return shards[Number(BigInt(normalizeAddress(payer)) % BigInt(shards.length))]!;
+}
+
 /** The ID `blockpay::channel::open` will assign, known before the transaction runs. */
 export function deriveChannelId(deployment: ChannelDeployment, payer: string, nonce: bigint): string {
   const key = ChannelKeyBcs.serialize({ payer: normalizeAddress(payer), nonce }).toBytes();
-  return deriveObjectID(deployment.registryId, `${normalizeAddress(deployment.packageId)}::channel::ChannelKey`, key);
+  return deriveObjectID(
+    registryFor(deployment, payer),
+    `${normalizeAddress(deployment.packageId)}::channel::ChannelKey`,
+    key,
+  );
 }
 
 export function randomNonce(): bigint {
@@ -120,12 +131,16 @@ export interface ChannelState {
   closeRequestedAtMs: bigint | null;
 }
 
-/** Read a channel. Returns `null` when it does not exist (never opened, or closed). */
-export async function getChannel(client: SuiClient, channelId: string): Promise<ChannelState | null> {
+/**
+ * Read a channel of the `blockpay::channel` package `packageId`. Returns `null` when it does not
+ * exist (never opened, or closed) or when the object is not a `Channel` of that package: anyone can
+ * publish a look-alike `channel::Channel` with the same layout, so the package must be pinned.
+ */
+export async function getChannel(client: SuiClient, channelId: string, packageId: string): Promise<ChannelState | null> {
   const { objects } = await client.core.getObjects({ objectIds: [channelId], include: { content: true } });
   const object = objects[0];
   if (!object || object instanceof Error || !object.content) return null;
-  const coinType = parseChannelCoinType(object.type);
+  const coinType = parseChannelCoinType(object.type, packageId);
   if (!coinType) return null;
   const raw = ChannelBcs.parse(object.content);
   return {
@@ -143,10 +158,12 @@ export async function getChannel(client: SuiClient, channelId: string): Promise<
   };
 }
 
-/** `0xpkg::channel::Channel<0x…::usdc::USDC>` → normalized coin type. */
-export function parseChannelCoinType(type: string): string | null {
-  const match = /^0x[0-9a-f]+::channel::Channel<(.+)>$/i.exec(type);
-  return match?.[1] ? normalizeCoinType(match[1]) : null;
+/** `0xpkg::channel::Channel<0x…::usdc::USDC>` → normalized coin type, or `null` unless `pkg` is `packageId`. */
+export function parseChannelCoinType(type: string, packageId: string): string | null {
+  const match = /^(0x[0-9a-f]+)::channel::Channel<(.+)>$/i.exec(type);
+  if (!match?.[1] || !match[2]) return null;
+  if (normalizeAddress(match[1]) !== normalizeAddress(packageId)) return null;
+  return normalizeCoinType(match[2]);
 }
 
 /** Coin type of a `ChannelOpened<T>`-style event type. */
@@ -186,7 +203,7 @@ export function buildOpenChannelTransaction(params: {
     target: target(params.deployment, 'open'),
     typeArguments: [coinType],
     arguments: [
-      tx.object(params.deployment.registryId),
+      tx.object(registryFor(params.deployment, params.sender)),
       tx.pure.address(normalizeAddress(params.payee)),
       tx.pure.address(normalizeAddress(params.operator)),
       tx.pure.vector('u8', Array.from(params.authorizer)),
