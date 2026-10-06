@@ -26,7 +26,8 @@ Servers authenticate to the hosted facilitator with `Authorization: Bearer bp_li
 
 The hosted facilitator charges a **flat fee per payment** settled with your API key, drawn from **prepaid credit**. Your callers pay exactly the quoted price; the fee never touches the payment itself.
 
-* **Top up**: send USDC to the BlockPay treasury address shown on the Billing page, **from one of your registered addresses**, then paste the transaction digest. The platform reads the transaction on-chain, checks the sender and the amount received, and credits it 1:1 in USD. Each transaction credits once.
+* **Top up**: on the Billing page, pick an amount and click **Top up**, then approve in your wallet. The platform prepares a gasless USDC transfer to the BlockPay treasury, your wallet signs it, and the platform broadcasts it and credits it 1:1 in USD as soon as it is final. You need no SUI for gas. The connected wallet must be one of your registered addresses.
+* **Manual top-up**: you can also send USDC to the treasury address yourself, **from one of your registered addresses**, then paste the transaction digest. The platform reads the transaction on-chain, checks the sender and the amount received, and credits it. Each transaction credits once.
 * **Usage**: every settled payment (an `exact` transfer or an accepted channel voucher) deducts the fee and appears in the credit history with the payment ID.
 * **Running out**: when credit cannot cover the fee, the facilitator refuses new payments to your addresses with `insufficient_platform_credit` (callers get a `402`). Payments already in flight still complete, so the balance can dip slightly below zero.
 * **Alerts**: a `billing.low_balance` webhook fires once when the balance crosses below the threshold (default $1), and the dashboard shows a banner.

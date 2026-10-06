@@ -69,9 +69,11 @@ Payment `fee` is the platform fee in micro-USD (6 decimals); `feeUsd` is the sam
 
 | Method | Path | |
 | --- | --- | --- |
-| `GET` | `/v1/billing` | `{ balanceUsd, feeUsd, paymentsRemaining, lowBalanceUsd, treasury: { network, address }, senders[] }` |
+| `GET` | `/v1/billing` | `{ balanceUsd, feeUsd, paymentsRemaining, lowBalanceUsd, treasury: { network, address }, topUp: { minUsd, maxUsd }, senders[] }` |
 | `GET` | `/v1/billing/ledger?limit=100` | Credit history: `kind` (`deposit`, `fee`, `adjustment`), `amountUsd`, `balanceAfterUsd`, `reference` (transaction digest for deposits, payment ID for fees). |
 | `POST` | `/v1/billing/deposits` | `{ digest }` → `201 { creditedUsd, balanceUsd }`. The transaction must have succeeded, been sent from one of your addresses, and paid a USD stablecoin to the treasury. `409` if already credited. |
+| `POST` | `/v1/billing/topups/prepare` | `{ sender, amountUsd }` → `{ transaction, amountUsd, network, asset, treasury }`. Builds an unsigned, gasless USDC transfer to the treasury from `sender`, which must be one of your addresses. Amount between `$1` and `$10000`. |
+| `POST` | `/v1/billing/topups` | `{ transaction, signature, amountUsd }` → `201 { creditedUsd, balanceUsd, digest }`. Verifies the wallet-signed transaction pays exactly `amountUsd` to the treasury, broadcasts it and credits it. |
 
 ### Channels
 
