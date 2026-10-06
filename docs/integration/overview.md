@@ -35,7 +35,7 @@ npm i @blockpay402/express   # or: pnpm add / yarn add / bun add
 ### Environment variables used in examples
 
 ```bash
-BLOCKPAY_FACILITATOR_URL=https://facilitator.blockpay.gg   # servers
+BLOCKPAY_FACILITATOR_URL=https://facilitator.blockpay.gg   # servers (testnet: https://facilitator.testnet.blockpay.gg)
 BLOCKPAY_API_KEY=bp_live_…                                 # servers using the hosted facilitator
 BLOCKPAY_PAY_TO=0x…                                        # servers: where payments go
 BLOCKPAY_PRIVATE_KEY=suiprivkey1…                          # clients and agents

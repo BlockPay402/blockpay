@@ -10,9 +10,10 @@
 ### Done
 * `blockpay::channel` on testnet (16 registry shards); internal security review and fixes.
 * `@blockpay402/*` 0.1.0 on npm.
+* `blockpay::channel` on mainnet (16 registry shards); hosted platform on mainnet at `app.blockpay.gg`, testnet moved to `app.testnet.blockpay.gg`.
 
 ### Next
-* Independent audit; immutable mainnet deployment.
+* Independent audit, then freeze the mainnet package (make it immutable).
 * x402 MCP transport helpers; `upto` scheme for usage-metered pricing.
 * Postgres store for the platform; multi-region facilitator.
 

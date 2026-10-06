@@ -1,5 +1,10 @@
 # Changelog
 
+### Unreleased
+
+* `blockpay::channel` on Sui mainnet (`0x270a878b…e222a`) with 16 registry shards; the SDK trusts the mainnet deployment by default. Not audited yet: use small amounts (see the [Disclaimer](../disclaimer.md)).
+* Hosted platform: mainnet at `app.blockpay.gg` / `facilitator.blockpay.gg`; testnet moved to `app.testnet.blockpay.gg` / `facilitator.testnet.blockpay.gg`.
+
 ### 0.1.1 — 2026-10-06
 
 * Same code as 0.1.0, published with [npm provenance](https://docs.npmjs.com/generating-provenance-statements): each package links to the GitHub Actions build and commit it came from. Prefer 0.1.1 over 0.1.0.

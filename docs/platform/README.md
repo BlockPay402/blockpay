@@ -2,6 +2,13 @@
 
 The BlockPay platform is a hosted facilitator plus a merchant dashboard. Payers never need an account; **merchants** sign in to manage what they receive.
 
+| Network | Dashboard | Facilitator (`facilitator.url`) |
+| --- | --- | --- |
+| `sui:mainnet` | [app.blockpay.gg](https://app.blockpay.gg) | `https://facilitator.blockpay.gg` |
+| `sui:testnet` | [app.testnet.blockpay.gg](https://app.testnet.blockpay.gg) | `https://facilitator.testnet.blockpay.gg` |
+
+Each network is a separate deployment with its own accounts, API keys, credit and ledger: create an API key on the dashboard of the network you integrate with.
+
 ### Sign in with your wallet
 
 Open the dashboard, connect the Sui wallet that receives your payments, and sign a message. No email or password: the signature proves you control the address. The first sign-in creates your merchant account and registers that address as a receiving address.

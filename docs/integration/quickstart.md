@@ -7,7 +7,7 @@ A paid Express API and a client that pays it, on Sui testnet.
 * Node.js 20+.
 * Two Sui addresses: one receives payments (server), one pays (client).
 * The client address funded with testnet USDC ([Circle faucet](https://faucet.circle.com/)). USDC payments of $0.01 or more are gasless, so the client needs no SUI for them.
-* A facilitator API key: sign in to the [dashboard](../platform/README.md) with the server's wallet and create one.
+* A testnet facilitator API key: sign in to the testnet dashboard, [app.testnet.blockpay.gg](https://app.testnet.blockpay.gg), with the server's wallet and create one ([Hosted facilitator & dashboard](../platform/README.md)).
 
 ### 2. Server
 
@@ -43,6 +43,9 @@ app.listen(3000, () => console.log('listening on :3000'));
 ```
 
 ```bash
+export BLOCKPAY_FACILITATOR_URL=https://facilitator.testnet.blockpay.gg
+export BLOCKPAY_API_KEY=bp_live_…        # from app.testnet.blockpay.gg
+export BLOCKPAY_PAY_TO=0x…               # the server's receiving address
 npx tsx server.ts
 curl -i "http://localhost:3000/weather?city=Hanoi"
 # HTTP/1.1 402 Payment Required
@@ -89,4 +92,4 @@ npx tsx client.ts
 
 * Charge less than a cent: see [channels](client-sdk.md#channels) — set the route price to `'$0.0005'` and the client pays with vouchers.
 * Give an agent a budget: [AI agents](agents.md).
-* Move to mainnet only after testing, and after reading the [Disclaimer](../disclaimer.md).
+* Move to mainnet only after testing, and after reading the [Disclaimer](../disclaimer.md): set `network: 'sui:mainnet'`, use `https://facilitator.blockpay.gg` and an API key from [app.blockpay.gg](https://app.blockpay.gg).
